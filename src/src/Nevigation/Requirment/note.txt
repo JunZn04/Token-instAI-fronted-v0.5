@@ -1,0 +1,62 @@
+
+--使用checkreq => requiment version ------
+
+import React, { useState } from "react";
+import axios from "axios";
+import Prompt from "../../Components/Prompt/Prompt2";
+import { NavLink, useHistory } from "react-router-dom"; // Import useHistory
+
+function Requirement() {
+  const history = useHistory(); // Add useHistory hook
+
+  const [reqData, setReqData] = useState({
+    req: "",
+  });
+
+  const handleFormDataChange = (fieldName, value) => {
+    setReqData((prevData) => ({
+      ...prevData,
+      [fieldName]: value,
+    }));
+  };
+
+  const handleGenerateClick = () => {
+    if (reqData.req.trim() === "") {
+      alert("Requirements cannot be empty!");
+    } else {
+      const confirmed = window.confirm("Are you sure you want to submit?");
+      if (confirmed) {
+        // Pass data to CheckReq and navigate
+        history.push({
+          pathname: "/CheckReq",
+          state: { id, projectname, reqData },
+        });
+      }
+    }
+  };
+
+  return (
+    <div>
+      <h1>Requirement</h1>
+      <div>
+        <Prompt value={reqData.req} onChange={(value) => handleFormDataChange("req", value)} />
+      </div>
+      <div className="button-group">
+        {linkToCheckReq ? (
+          <NavLink to={`/CheckReq?id=${id}&project=${projectname}&req=${reqData.req}`}>
+            <button onClick={handleGenerateClick}>Submit</button>
+          </NavLink>
+        ) : (
+          <button onClick={handleGenerateClick}>Submit</button>
+        )}
+        <br />
+        <NavLink to={`/Step?id=${id}&project=${projectname}`}>
+          <button>Go back</button>
+        </NavLink>
+      </div>
+    </div>
+  );
+}
+
+export default Requirement;
+

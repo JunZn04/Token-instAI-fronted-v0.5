@@ -1,0 +1,164 @@
+// 尚在修改問題
+import React, { useState } from 'react';
+import loginstyle from "./Download.module.css";
+import axios from 'axios';
+import { NavLink, useLocation } from 'react-router-dom';
+import "./Download.module.css";
+
+function Download2() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const id = searchParams.get('id');
+  const projectname = searchParams.get('projectname');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [filename, setFilename] = useState("");
+
+  // 在提交之前驗證所選文件
+  const validateFiles = () => {
+    if (selectedFiles.length === 0) {
+      alert('請選擇至少一個要上傳的文件。');
+      return false;
+    }
+
+    // 檢查是否為圖像
+    const isValidFileType = selectedFiles.every(file =>
+      ['image/jpeg', 'image/png'].includes(file.type)
+    );
+
+    if (!isValidFileType) {
+      alert('只能上傳 JPEG 或 PNG 圖像。');
+      return false;
+    }
+    return true;
+  };
+
+  // 在提交之前預覽所選圖片
+  const handlePreview = () => {
+    // 設置圖片預覽
+    const previews = selectedFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...previews]);
+  };
+
+  // 處理文件選擇
+  const handleFileSelect = async (event) => {
+    const files = event.target.files;
+    const fileArray = Array.from(files);
+
+    // 過濾文件
+    const allowedFileTypes = ['image/jpeg', 'image/png', 'image/jpeg']; //增加jpeg
+    const filteredFiles = fileArray.filter((file) =>
+      allowedFileTypes.includes(file.type)
+    );
+
+    const fileNames = filteredFiles.map((file) => file.name);
+    setFilename(fileNames);
+    setSelectedFiles(filteredFiles);
+
+    // 設置標誌，指示需要更新預覽
+    setPreviewReady(false);
+
+    const previews = filteredFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...previews]);
+  };
+
+  // 處理上傳過程
+  const handleupload = async () => {
+    // 進行其他驗證
+    if (!validateFiles()) {
+      alert('請選擇至少一個要上傳的文件。');
+      return;
+    }
+
+    // 準備並將數據發送到後端
+    const formData = new FormData();
+    for (let i = 0; i < selectedFiles.length; ++i) {
+      formData.append('file', selectedFiles[i]);
+    }
+
+    try {
+      const response = await axios.post(`http://localhost:8080/api/upload/upload?username=${id}&projectname=${projectname}`, formData);
+
+      console.log(response.data);
+      alert('上傳成功');
+    } catch (error) {
+      console.error(error);
+      alert('上傳失敗');
+    }
+
+    // 更新預覽
+    handlePreview();
+
+    // 設置標誌，指示預覽已準備好
+    setPreviewReady(true);
+  };
+
+  // 解決 ESLint 錯誤
+  const handleDeleteImage = (index) => {
+    const updatedFiles = [...selectedFiles];
+    const updatedPreviews = [...imagePreviews];
+
+    updatedFiles.splice(index, 1);
+    updatedPreviews.splice(index, 1);
+
+    setSelectedFiles(updatedFiles);
+    setImagePreviews(updatedPreviews);
+  };
+
+  const handleDeleteAllPreviews = () => {
+    setImagePreviews([]);
+    setSelectedFiles([]);
+  };
+
+  const handleDownloadAll = () => {
+    selectedFiles.forEach((file) => {
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(new Blob([file]));
+      console.log(a.href);
+      a.setAttribute("download", file.name);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  };
+
+  const handleDownload = (file) => {
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(new Blob([file]));
+    console.log(a.href);
+    a.setAttribute("download", file.name);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  return (
+    <div className={loginstyle.background}>
+      <h1>上傳/下載</h1>
+      <input type="file" accept="image/*" multiple name="images" onChange={handleFileSelect} />
+      <div className="previews">
+        {previewReady &&
+          imagePreviews.map((preview, index) => (
+            <span key={index} className="preview">
+              <img
+                src={preview}
+                alt={`image ${index}`}
+                style={{ width: '250px', height: '300px' }}
+                loading='lazy'
+              />
+              <button onClick={() => handleDeleteImage(index)}>刪除</button>
+              <button onClick={() => handleDownload(selectedFiles[index])}>下載</button>
+            </span>
+          ))}
+      </div>
+      <button onClick={handleDeleteAllPreviews}>全部刪除</button>
+      <button onClick={handleDownloadAll}>全部下載</button>
+      <div>
+        <NavLink to={`/Step?id=${id}&project=${projectname}`}><button onClick={handleupload}>預覽並上傳</button></NavLink>
+      </div>
+    </div>
+  );
+}
+
+export default Download2;

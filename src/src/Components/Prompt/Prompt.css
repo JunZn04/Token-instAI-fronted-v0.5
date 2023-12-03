@@ -1,0 +1,24 @@
+/*prompt css */
+
+
+.input-container {
+  position: relative;
+  text-align: center;
+}
+
+.input-field {
+  width: 80%;
+  max-width: auto; 
+  height: 600PX ; 
+  max-height:auto;
+  padding: 15px; 
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box; 
+}
+
+.input-field::placeholder {
+  color: #999;
+}
